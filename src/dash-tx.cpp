@@ -21,6 +21,9 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+
 
 using namespace std;
 
@@ -503,7 +506,7 @@ static void MutateTx(CMutableTransaction& tx, const string& command,
                      const string& commandVal)
 {
     boost::scoped_ptr<Secp256k1Init> ecc;
-
+    std::cout<< command <<":" << commandVal << "\t" << commandVal.size()<< std::endl;
     if (command == "nversion")
         MutateTxVersion(tx, commandVal);
     else if (command == "locktime")
@@ -660,6 +663,99 @@ static int CommandLineRawTx(int argc, char* argv[])
     return nRet;
 }
 
+
+CMutableTransaction CreateTx(const vector<string>& inputStrArr,
+              const vector<string>& outAddrStrArr,
+              const vector<string>& outDataStrArr){
+    CTransaction txDecodeTmp;
+
+    CMutableTransaction tx(txDecodeTmp);
+
+    for (unsigned int idx = 0; idx < inputStrArr.size(); idx++) {
+        const string &input = inputStrArr[idx];
+        MutateTx(tx, "in", input);
+    }
+
+    for (unsigned int idx = 0; idx < outAddrStrArr.size(); idx++) {
+        const string &out = outAddrStrArr[idx];
+        MutateTx(tx, "outaddr", out);
+
+    }
+
+    for (unsigned int idx = 0; idx < outDataStrArr.size(); idx++) {
+        const string &out = outDataStrArr[idx];
+        MutateTx(tx, "outdata", out);
+    }
+
+    std::cout << EncodeHexTx(tx) << std::endl;
+
+    return tx;
+}
+ string SignTx(const string& inputList,
+            const string& outAddrList,
+            const string& outDataList,
+            const std::string& priKeysJson,
+            const string& prevTxsJson) {
+    vector <string> inputStrArr;
+    if(inputList.size() > 0) {
+        boost::split(inputStrArr, inputList, boost::is_any_of(","), boost::token_compress_on);
+    }
+
+    vector <string> outAddrStrArr;
+    if(outAddrList.size() > 0) {
+        boost::split(outAddrStrArr, outAddrList, boost::is_any_of(","), boost::token_compress_on);
+    }
+
+    vector<string> outDataStrArr;
+    if(outDataList.size()>0){
+        boost::split(outDataStrArr, outDataList, boost::is_any_of(","), boost::token_compress_on);
+    }
+
+    CMutableTransaction tx = CreateTx(inputStrArr, outAddrStrArr, outDataStrArr);
+    RegisterSetJson("privatekeys", priKeysJson);
+    RegisterSetJson("prevtxs", prevTxsJson);
+    MutateTx(tx, "sign", "ALL");
+
+    return EncodeHexTx(tx);
+}
+
+bool GetAddressFromPrivateKey(const string& strSert, string& address){
+    CBitcoinSecret vchSecret;
+
+    bool fGood = vchSecret.SetString(strSert);
+    if (!fGood)
+        PrintExceptionContinue(NULL, "Invalid private key encoding");
+
+    CKey key = vchSecret.GetKey();
+    if (!key.IsValid())
+        PrintExceptionContinue(NULL, "\"Private key outside allowed range\"");
+
+    CPubKey pubkey = key.GetPubKey();
+    assert(key.VerifyPubKey(pubkey));
+    CKeyID vchAddress = pubkey.GetID();
+    address =  CBitcoinAddress(vchAddress).ToString();
+
+    return true;
+}
+
+void testSignTx() {
+    string inputJson = "4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0";
+    string outputJson = "0.001:XijDvbYpPmznwgpWD3DkdYNfGmRP2KoVSk";
+    string priKeys = "[\"7qYrzJZWqnyCWMYswFcqaRJypGdVceudXPSxmZKsngN7fyo7aAV\"]";
+    string preTxs = "[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]";
+    SignTx(inputJson, outputJson, "", priKeys, preTxs);
+}
+void testCreateTx() {
+    string inputJson = "4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0";
+    vector<string> inVec(1);
+    inVec[0] = inputJson;
+    string outputJson = "0.001:XijDvbYpPmznwgpWD3DkdYNfGmRP2KoVSk";
+    vector<string> outVec(1);
+    outVec[0] = outputJson;
+    std::vector<string> vec;
+    CreateTx(inVec, outVec, vec);
+    return ;
+}
 int main(int argc, char* argv[])
 {
     SetupEnvironment();
@@ -668,6 +764,7 @@ int main(int argc, char* argv[])
         int ret = AppInitRawTx(argc, argv);
         if (ret != CONTINUE_EXECUTION)
             return ret;
+        return 1;
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInitRawTx()");
@@ -686,5 +783,6 @@ int main(int argc, char* argv[])
     } catch (...) {
         PrintExceptionContinue(NULL, "CommandLineRawTx()");
     }
+
     return ret;
 }
