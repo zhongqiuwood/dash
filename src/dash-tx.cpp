@@ -694,8 +694,9 @@ CMutableTransaction CreateTx(const vector<string>& inputStrArr,
  string SignTx(const string& inputList,
             const string& outAddrList,
             const string& outDataList,
-            const std::string& priKeysJson,
-            const string& prevTxsJson) {
+            const string& priKeysJson,
+            const string& prevTxsJson,
+            const string& signType) {
     vector <string> inputStrArr;
     if(inputList.size() > 0) {
         boost::split(inputStrArr, inputList, boost::is_any_of(","), boost::token_compress_on);
@@ -714,7 +715,7 @@ CMutableTransaction CreateTx(const vector<string>& inputStrArr,
     CMutableTransaction tx = CreateTx(inputStrArr, outAddrStrArr, outDataStrArr);
     RegisterSetJson("privatekeys", priKeysJson);
     RegisterSetJson("prevtxs", prevTxsJson);
-    MutateTx(tx, "sign", "ALL");
+    MutateTx(tx, "sign", signType);
 
     return EncodeHexTx(tx);
 }
@@ -743,7 +744,8 @@ void testSignTx() {
     string outputJson = "0.001:XijDvbYpPmznwgpWD3DkdYNfGmRP2KoVSk";
     string priKeys = "[\"7qYrzJZWqnyCWMYswFcqaRJypGdVceudXPSxmZKsngN7fyo7aAV\"]";
     string preTxs = "[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]";
-    SignTx(inputJson, outputJson, "", priKeys, preTxs);
+    string signType = "ALL";
+    SignTx(inputJson, outputJson, "", priKeys, preTxs ,signType);
 }
 void testCreateTx() {
     string inputJson = "4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0";

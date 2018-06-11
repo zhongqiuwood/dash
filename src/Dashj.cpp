@@ -2,12 +2,11 @@
 // Created by shine jiang on 2018/6/10.
 //
 
-#include "Dashj.h"
+#include "com_okcoin_vault_jni_digibyte_Digibytej.h"
 #include "jni.h"
 #include <stdio.h>
 #include <string>
 #include <list>
-#include "Dashj.h"
 
 #include "JavaAutoByteArray.h"
 
@@ -24,10 +23,11 @@ extern string SignTx(const string& inputList,
                      const string& outAddrList,
                      const string& outDataList,
                      const string& priKeysJson,
-                     const string& prevTxsJson);
+                     const string& prevTxsJson,
+                     const string& signType);
 extern bool GetAddressFromPrivateKey(const string& strSert, string& address);
 
-JNIEXPORT jstring JNICALL Java_Dashj_GetAddressByPrivateKey
+JNIEXPORT jstring JNICALL Java_com_okcoin_vault_jni_digibyte_Digibytej_GetAddressByPrivateKey
         (JNIEnv * env, jobject obj, jstring priKey) {
 
     string address;
@@ -37,24 +37,25 @@ JNIEXPORT jstring JNICALL Java_Dashj_GetAddressByPrivateKey
     return char2jstring(env, address.c_str());
 }
 
-JNIEXPORT jstring JNICALL Java_Dashj_SignTranscation
+JNIEXPORT jstring JNICALL Java_com_okcoin_vault_jni_digibyte_Digibytej_SignTranscation
         (JNIEnv *env, jobject obj,
          jstring inputList,
          jstring outAddrList,
          jstring outDataList,
          jstring priKeysJson,
-         jstring prevTxsJson) {
+         jstring prevTxsJson,
+         jstring signType) {
 
     char *pInputList = jstring2char(env, inputList);
     char *pOutAddrList = jstring2char(env, outAddrList);
     char *pOutDataList = jstring2char(env, outDataList);
     char *pPriKeysJson = jstring2char(env, priKeysJson);
     char *pPrevTxsJson = jstring2char(env, prevTxsJson);
+    char *psignJson = jstring2char(env, signType);
 
-    string txSignHexStr = SignTx(pInputList, pOutAddrList, pOutDataList, pPriKeysJson, pPrevTxsJson);
+    string txSignHexStr = SignTx(pInputList, pOutAddrList, pOutDataList, pPriKeysJson, pPrevTxsJson, psignJson);
     return char2jstring(env, txSignHexStr.c_str());
 }
-
 
 jbyteArray string2byteArray(JNIEnv *env, const string& cppString) {
 
