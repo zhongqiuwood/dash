@@ -13,6 +13,6 @@ Dashj.o: Dashj.cpp
 # for centos
 ############################################
 dash_tx.so: $(dash_tx_OBJECTS) $(dash_tx_DEPENDENCIES) $(EXTRA_dash_tx_DEPENDENCIES)
-	@rm -f dash-cli$(EXEEXT)
+	@rm -f dash-tx$(EXEEXT)
 	$(AM_V_CXXLD)$(dash_tx_LINK) $(dash_tx_OBJECTS) -shared $(dash_tx_LDADD) $(LIBS)
 
