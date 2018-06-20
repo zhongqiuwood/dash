@@ -903,3 +903,40 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
 
     return hashTx.GetHex();
 }
+
+
+UniValue getaddressbyprivatekey(const UniValue& params, bool fHelp) {
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+                "getaddressbyprivatekey \"privatekey\"\n"
+                "\nArguments:\n"
+                "1. \"privatekey\"      (string, required) The base58 privatekey\n"
+                "\nResult:\n"
+                "\"hexaddress\"      (string) The address for the private key\n"
+                "\nExamples:\n"
+                + HelpExampleCli("getaddressbyprivatekey", "\"L43NUb18bYnsZr8SaudQtLczX2SJz6KQG6tnXWJTM46po7m4m49h\"")
+                + HelpExampleRpc("getaddressbyprivatekey", "\"Kyhdf5LuKTRx4ge69ybABsiUAWjVRK4XGxAKk2FQLp2HjGMy87Z4\"")
+        );
+
+    CBitcoinSecret BitcoinSecret;
+    BitcoinSecret.SetString(params[0].get_str());
+
+    if (!BitcoinSecret.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+    }
+
+    CKey key = BitcoinSecret.GetKey();
+    CPubKey pubkey = key.GetPubKey();
+    CKeyID keyId = pubkey.GetID();
+    CBitcoinAddress BitcoinAddress;
+    BitcoinAddress.Set(keyId);
+
+    if (!BitcoinAddress.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+    }
+
+    string addr = BitcoinAddress.ToString();
+
+    cout << addr << endl;
+    return addr;
+}
