@@ -1,0 +1,26 @@
+include Makefile
+
+##################################################################
+
+local_rpc_OBJECTS = rpc/libbitcoin_cli_a-client.o test/test_dash_local_rpc.o
+
+test/test_dash_local_rpc.o: test/test_dash_local_rpc.cpp
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	-I${JAVA_HOME}/include -I${JAVA_HOME}/include/darwin -I${JAVA_HOME}/include/linux \
+	$(test_test_dash_CPPFLAGS) $(CPPFLAGS) $(test_test_dash_CXXFLAGS) $(CXXFLAGS) \
+	-MT test/test_dash_local_rpc.o -MD -MP -MF test/$(DEPDIR)/test_dash_local_rpc.Tpo -c -o test/test_dash_local_rpc.o test/test_dash_local_rpc.cpp
+
+dashrpc: $(dashd_OBJECTS) $(dashd_DEPENDENCIES) $(EXTRA_dashd_DEPENDENCIES) $(local_rpc_OBJECTS)
+	$(AM_V_CXXLD)$(dashd_LINK) $(dashd_OBJECTS) $(dashd_LDADD) $(LIBS) $(local_rpc_OBJECTS)
+
+dashd.dylib: $(dashd_OBJECTS) $(dashd_DEPENDENCIES) $(EXTRA_dashd_DEPENDENCIES) $(local_rpc_OBJECTS)
+	$(AM_V_CXXLD)$(dashd_LINK) $(dashd_OBJECTS) $(dashd_LDADD) $(LIBS) $(local_rpc_OBJECTS) -dynamiclib
+
+dashd.so: $(dashd_OBJECTS) $(dashd_DEPENDENCIES) $(EXTRA_dashd_DEPENDENCIES) $(local_rpc_OBJECTS)
+	$(AM_V_CXXLD)$(dashd_LINK) $(dashd_OBJECTS) $(dashd_LDADD) $(LIBS) $(local_rpc_OBJECTS) -shared
+
+
+
+
+
+
