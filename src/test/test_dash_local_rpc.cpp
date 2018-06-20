@@ -38,8 +38,7 @@
 #include <boost/thread.hpp>
 #include <stdio.h>
 
-CClientUIInterface uiInterface; // Declared but not defined in ui_interface.h
-CWallet* pwalletMain;
+CWallet* pwalletMain2;
 
 using namespace std;
 extern void SelectParams(const std::string& network);
@@ -48,7 +47,6 @@ char* jstring2char(JNIEnv* env, jstring jstr);
 jobjectArray stringList2jobjectArray(JNIEnv* env, const list<string>& stringList);
 jstring char2jstring(JNIEnv* env, const char* pat);
 std::list<std::string> invokeRpc(std::string args);
-boost::filesystem::path GetTempPath();
 //-I${JAVA_HOME}/include -I${JAVA_HOME}/include/darwin
 
 std::unique_ptr<CConnman> g_connman2;
@@ -87,9 +85,9 @@ TestingSetup::TestingSetup(const std::string &chainName) : BasicTestingSetup(cha
     InitBlockIndex(chainparams);
 #ifdef ENABLE_WALLET
     bool fFirstRun;
-    pwalletMain = new CWallet("wallet.dat");
-    pwalletMain->LoadWallet(fFirstRun);
-    RegisterValidationInterface(pwalletMain);
+    pwalletMain2 = new CWallet("wallet.dat");
+    pwalletMain2->LoadWallet(fFirstRun);
+    RegisterValidationInterface(pwalletMain2);
 #endif
     nScriptCheckThreads = 3;
     for (int i = 0; i < nScriptCheckThreads - 1; i++)
@@ -104,9 +102,9 @@ TestingSetup::~TestingSetup() {
     threadGroup.interrupt_all();
     threadGroup.join_all();
 #ifdef ENABLE_WALLET
-    UnregisterValidationInterface(pwalletMain);
-    delete pwalletMain;
-    pwalletMain = NULL;
+    UnregisterValidationInterface(pwalletMain2);
+    delete pwalletMain2;
+    pwalletMain2 = NULL;
 #endif
     UnloadBlockIndex();
     delete pcoinsTip;
@@ -257,25 +255,3 @@ char* jstring2char(JNIEnv* env, jstring jstr)
     return rtn;
 }
 
-
-boost::filesystem::path GetTempPath() {
-#if BOOST_FILESYSTEM_VERSION == 3
-    return boost::filesystem::temp_directory_path();
-#else
-    // TODO: remove when we don't support filesystem v2 anymore
-    boost::filesystem::path path;
-#ifdef WIN32
-    char pszPath[MAX_PATH] = "";
-
-    if (GetTempPathA(MAX_PATH, pszPath))
-        path = boost::filesystem::path(pszPath);
-#else
-    path = boost::filesystem::path("/tmp");
-#endif
-    if (path.empty() || !boost::filesystem::is_directory(path)) {
-        LogPrintf("GetTempPath(): failed to find temp path\n");
-        return boost::filesystem::path("");
-    }
-    return path;
-#endif
-}
